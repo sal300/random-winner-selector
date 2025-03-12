@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Winner Selector</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #4a6bff;
+            --secondary-color: #ff6b6b;
+            --background-color: #f8f9fa;
+            --text-color: #333;
+            --border-color: #ddd;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-top: 0;
+        }
+
+        .logo-section, .participants-section, .winner-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: var(--background-color);
+        }
+
+        .section-title {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        .logo-preview {
+            width: 100%;
+            height: 150px;
+            border: 2px dashed var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 10px;
+            border-radius: 8px;
+        }
+
+        .logo-preview img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .logo-placeholder {
+            text-align: center;
+            color: #888;
+        }
+
+        #participants {
+            width: 100%;
+            height: 120px;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            resize: vertical;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .primary-btn {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .secondary-btn {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        .action-btn {
+            background-color: #4caf50;
+            color: white;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .winner-display {
+            padding: 20px;
+            text-align: center;
+            font-size: 28px;
+            font-weight: bold;
+            border-radius: 8px;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: white;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            border: 2px solid var(--primary-color);
+        }
+
+        .winner-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            gap: 20px;
+        }
+
+        .winner-name {
+            color: var(--primary-color);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            animation: pulse 1.5s infinite;
+            font-size: 32px;
+        }
+        
+        .presented-by {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 10px;
+            font-size: 16px;
+            color: #666;
+        }
+        
+        .winner-logo {
+            margin-top: 10px;
+            max-width: 150px;
+            max-height: 80px;
+            display: flex;
+            justify-content: center;
+        }
+        
+        .winner-logo img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .spinning {
+            animation: spin 0.15s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { color: var(--primary-color); }
+            33% { color: var(--secondary-color); }
+            66% { color: #4caf50; }
+            100% { color: var(--primary-color); }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        #logoInput {
+            display: none;
+        }
+
+        .history-section {
+            margin-top: 20px;
+        }
+
+        .winner-history {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+        }
+
+        .history-item {
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 120px;
+            background-color: #555;
+            color: white;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -60px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 14px;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Responsive styles */
+        @media (max-width: 600px) {
+            .buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Random Winner Selector</h1>
+        
+        <div class="logo-section">
+            <div class="section-title">Upload Your Logo</div>
+            <div class="logo-preview" id="logoPreview">
+                <div class="logo-placeholder">
+                    <p>Click to upload your logo</p>
+                    <p><small>(Recommended: Square image, PNG format)</small></p>
+                </div>
+            </div>
+            <input type="file" id="logoInput" accept="image/*">
+        </div>
+        
+        <div class="participants-section">
+            <div class="section-title">Enter Participants</div>
+            <textarea id="participants" placeholder="Enter participants' names, one per line or comma-separated"></textarea>
+            <p><small>Example: John Smith, Jane Doe, Alex Johnson</small></p>
+        </div>
+        
+        <div class="buttons">
+            <button id="pickWinnerBtn" class="primary-btn">Pick a Winner!</button>
+            <button id="redoBtn" class="secondary-btn" disabled>Pick Another Winner</button>
+            <button id="downloadBtn" class="action-btn" disabled>Download Winner Image</button>
+        </div>
+        
+        <div class="winner-section hidden" id="winnerSection">
+            <div class="section-title">And the Winner is...</div>
+            <div class="winner-display" id="winnerDisplay">
+                <div class="winner-content">
+                    <span id="winnerName" class="winner-name">Spinning...</span>
+                    <div class="presented-by">
+                        <span>Presented by</span>
+                        <div id="winnerLogo" class="winner-logo"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="history-section hidden" id="historySection">
+            <div class="section-title">Previous Winners</div>
+            <ul class="winner-history" id="winnerHistory"></ul>
+        </div>
+    </div>
+    
+    <canvas id="canvas"></canvas>
+
+    <script>
+        // DOM Elements
+        const logoInput = document.getElementById('logoInput');
+        const logoPreview = document.getElementById('logoPreview');
+        const participantsInput = document.getElementById('participants');
+        const pickWinnerBtn = document.getElementById('pickWinnerBtn');
+        const redoBtn = document.getElementById('redoBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const winnerSection = document.getElementById('winnerSection');
+        const winnerDisplay = document.getElementById('winnerDisplay');
+        const winnerName = document.getElementById('winnerName');
+        const winnerLogo = document.getElementById('winnerLogo');
+        const historySection = document.getElementById('historySection');
+        const winnerHistory = document.getElementById('winnerHistory');
+        
+        // Variables
+        let participants = [];
+        let winners = [];
+        let confettiInstance = null;
+        let logoUrl = null;
+
+        // Logo Upload
+        logoPreview.addEventListener('click', () => {
+            logoInput.click();
+        });
+
+        logoInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    logoUrl = event.target.result;
+                    logoPreview.innerHTML = `<img src="${logoUrl}" alt="Logo">`;
+                    
+                    // Also update the winner logo if it exists
+                    if (winnerLogo) {
+                        winnerLogo.innerHTML = `<img src="${logoUrl}" alt="Logo">`;
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Pick Winner Button
+        pickWinnerBtn.addEventListener('click', () => {
+            const names = parseParticipants(participantsInput.value);
+            
+            if (names.length === 0) {
+                alert('Please enter at least one participant.');
+                return;
+            }
+            
+            participants = names;
+            selectWinner();
+        });
+
+        // Redo Button
+        redoBtn.addEventListener('click', () => {
+            selectWinner();
+        });
+
+        // Download Winner Image
+        downloadBtn.addEventListener('click', () => {
+            if (!winnerName.textContent || winnerName.textContent === 'Spinning...') {
+                return;
+            }
+            
+            createWinnerImage();
+        });
+
+        // Parse Participants
+        function parseParticipants(input) {
+            if (!input.trim()) return [];
+
+            // Check if the input contains commas (comma-separated)
+            if (input.includes(',')) {
+                return input.split(',')
+                    .map(name => name.trim())
+                    .filter(name => name.length > 0);
+            } else {
+                // Otherwise, assume one per line
+                return input.split('\n')
+                    .map(name => name.trim())
+                    .filter(name => name.length > 0);
+            }
+        }
+
+        // Select Winner
+        function selectWinner() {
+            if (participants.length === 0) {
+                alert('No participants available.');
+                return;
+            }
+
+            // Show winner section
+            winnerSection.classList.remove('hidden');
+            winnerName.textContent = 'Spinning...';
+            winnerName.classList.add('spinning');
+            
+            // Update the winner logo with the current logo if available
+            if (logoUrl && winnerLogo) {
+                winnerLogo.innerHTML = `<img src="${logoUrl}" alt="Logo">`;
+            }
+            
+            // Disable buttons during spinning
+            pickWinnerBtn.disabled = true;
+            redoBtn.disabled = true;
+            downloadBtn.disabled = true;
+
+            // Spin through names
+            let spinIndex = 0;
+            const spinInterval = setInterval(() => {
+                winnerName.textContent = participants[spinIndex % participants.length];
+                spinIndex++;
+            }, 100);
+
+            // Stop after random time between 3-5 seconds
+            const spinTime = Math.random() * 2000 + 3000; // 3-5 seconds
+            
+            setTimeout(() => {
+                clearInterval(spinInterval);
+                const winnerIndex = Math.floor(Math.random() * participants.length);
+                const winner = participants[winnerIndex];
+                
+                // Display winner
+                winnerName.textContent = winner;
+                winnerName.classList.remove('spinning');
+                
+                // Launch confetti
+                launchConfetti();
+                
+                // Add to history
+                addToHistory(winner);
+                
+                // Enable buttons
+                redoBtn.disabled = false;
+                downloadBtn.disabled = false;
+                pickWinnerBtn.disabled = false;
+            }, spinTime);
+        }
+
+        // Confetti
+        function launchConfetti() {
+            const duration = 4000;
+            const end = Date.now() + duration;
+            
+            // Launch multiple bursts of confetti
+            (function frame() {
+                confetti({
+                    particleCount: 50,
+                    angle: 60,
+                    spread: 55,
+                    origin: { x: 0, y: 0.6 }
+                });
+                
+                confetti({
+                    particleCount: 50,
+                    angle: 120,
+                    spread: 55,
+                    origin: { x: 1, y: 0.6 }
+                });
+                
+                if (Date.now() < end) {
+                    requestAnimationFrame(frame);
+                }
+            }());
+            
+            // Fire cannon in the middle
+            confetti({
+                particleCount: 100,
+                spread: 100,
+                origin: { y: 0.7 }
+            });
+        }
+
+        // Add winner to history
+        function addToHistory(winner) {
+            winners.unshift(winner);
+            
+            // Show history section
+            if (historySection.classList.contains('hidden')) {
+                historySection.classList.remove('hidden');
+            }
+            
+            // Update history list
+            renderHistory();
+        }
+
+        // Render history list
+        function renderHistory() {
+            winnerHistory.innerHTML = '';
+            
+            winners.forEach((winner, index) => {
+                const li = document.createElement('li');
+                li.className = 'history-item';
+                li.innerHTML = `
+                    <span>${winner}</span>
+                    <span>${new Date().toLocaleTimeString()}</span>
+                `;
+                winnerHistory.appendChild(li);
+            });
+        }
+
+        // Create and download winner image
+        function createWinnerImage() {
+            // Create a canvas for the image
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas size
+            canvas.width = 800;
+            canvas.height = 600;
+            
+            // Background
+            ctx.fillStyle = '#f8f9fa';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw border
+            ctx.strokeStyle = '#4a6bff';
+            ctx.lineWidth = 10;
+            ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
+            
+            // Title
+            ctx.fillStyle = '#4a6bff';
+            ctx.font = 'bold 40px Segoe UI, Arial, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('Winner Announcement!', canvas.width / 2, 80);
+            
+            // Winner name
+            ctx.fillStyle = '#ff6b6b';
+            ctx.font = 'bold 60px Segoe UI, Arial, sans-serif';
+            ctx.fillText(winnerName.textContent, canvas.width / 2, canvas.height / 2);
+            
+            // Draw logo if available
+            if (logoUrl) {
+                const logo = new Image();
+                logo.src = logoUrl;
+                
+                logo.onload = () => {
+                    // Calculate logo size (max 150px height)
+                    const maxHeight = 150;
+                    const ratio = logo.width / logo.height;
+                    const height = Math.min(maxHeight, logo.height);
+                    const width = height * ratio;
+                    
+                    // Draw logo at the bottom
+                    ctx.drawImage(logo, (canvas.width - width) / 2, canvas.height - height - 50, width, height);
+                    
+                    // Add date
+                    ctx.fillStyle = '#555';
+                    ctx.font = '20px Segoe UI, Arial, sans-serif';
+                    ctx.fillText(new Date().toLocaleDateString(), canvas.width / 2, canvas.height - 20);
+                    
+                    // Create download link
+                    downloadImage(canvas);
+                };
+            } else {
+                // Add date
+                ctx.fillStyle = '#555';
+                ctx.font = '20px Segoe UI, Arial, sans-serif';
+                ctx.fillText(new Date().toLocaleDateString(), canvas.width / 2, canvas.height - 40);
+                
+                // Create download link
+                downloadImage(canvas);
+            }
+        }
+
+        // Download the canvas as an image
+        function downloadImage(canvas) {
+            const link = document.createElement('a');
+            link.download = `winner-${winnerName.textContent.replace(/\s+/g, '-')}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+    </script>
+</body>
+</html>
