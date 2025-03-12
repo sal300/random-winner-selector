@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Random Winner Selector</title>
+    <title>Random Winner Selector | منتقي الفائز العشوائي</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <style>
         :root {
@@ -282,6 +282,39 @@
             opacity: 1;
         }
 
+        /* RTL Support for Arabic */
+        [dir="rtl"] {
+            text-align: right;
+        }
+
+        [dir="rtl"] .buttons {
+            flex-direction: row-reverse;
+        }
+
+        /* Language Switcher */
+        .language-switcher {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+        }
+
+        .language-btn {
+            padding: 8px 16px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .language-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
         /* Responsive styles */
         @media (max-width: 600px) {
             .buttons {
@@ -291,7 +324,11 @@
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="language-switcher">
+        <button id="languageToggle" class="language-btn">العربية</button>
+    </div>
+    
+    <div class="container" dir="ltr">
         <h1>Random Winner Selector</h1>
         
         <div class="logo-section">
@@ -339,6 +376,48 @@
     <canvas id="canvas"></canvas>
 
     <script>
+        // Language support
+        const translations = {
+            english: {
+                title: "Random Winner Selector",
+                uploadLogo: "Upload Your Logo",
+                uploadPlaceholder: "Click to upload your logo",
+                uploadNote: "(Recommended: Square image, PNG format)",
+                enterParticipants: "Enter Participants",
+                participantsPlaceholder: "Enter participants' names, one per line or comma-separated",
+                participantsExample: "Example: John Smith, Jane Doe, Alex Johnson",
+                pickWinner: "Pick a Winner!",
+                pickAnother: "Pick Another Winner",
+                downloadWinner: "Download Winner Image",
+                winnerIs: "And the Winner is...",
+                spinning: "Spinning...",
+                presentedBy: "Presented by",
+                previousWinners: "Previous Winners",
+                languageBtn: "العربية",
+                noParticipants: "Please enter at least one participant.",
+                noParticipantsAvailable: "No participants available."
+            },
+            arabic: {
+                title: "منتقي الفائز العشوائي",
+                uploadLogo: "حمّل شعارك",
+                uploadPlaceholder: "انقر لتحميل الشعار",
+                uploadNote: "(يُفضل: صورة مربعة، بتنسيق PNG)",
+                enterParticipants: "أدخل المشاركين",
+                participantsPlaceholder: "أدخل أسماء المشاركين، واحد في كل سطر أو مفصولة بفواصل",
+                participantsExample: "مثال: علي محمد، نور أحمد، سارة حسين",
+                pickWinner: "اختر فائزاً!",
+                pickAnother: "اختر فائزاً آخر",
+                downloadWinner: "تحميل صورة الفائز",
+                winnerIs: "والفائز هو...",
+                spinning: "جاري الاختيار...",
+                presentedBy: "مقدم من",
+                previousWinners: "الفائزون السابقون",
+                languageBtn: "English",
+                noParticipants: "الرجاء إدخال مشارك واحد على الأقل.",
+                noParticipantsAvailable: "لا يوجد مشاركين."
+            }
+        };
+
         // DOM Elements
         const logoInput = document.getElementById('logoInput');
         const logoPreview = document.getElementById('logoPreview');
@@ -352,12 +431,87 @@
         const winnerLogo = document.getElementById('winnerLogo');
         const historySection = document.getElementById('historySection');
         const winnerHistory = document.getElementById('winnerHistory');
+        const languageToggle = document.getElementById('languageToggle');
+        const container = document.querySelector('.container');
         
         // Variables
         let participants = [];
         let winners = [];
         let confettiInstance = null;
         let logoUrl = null;
+        let currentLanguage = 'english';
+
+        // Language toggle functionality
+        languageToggle.addEventListener('click', () => {
+            currentLanguage = currentLanguage === 'english' ? 'arabic' : 'english';
+            
+            // Update direction
+            if (currentLanguage === 'arabic') {
+                container.setAttribute('dir', 'rtl');
+            } else {
+                container.setAttribute('dir', 'ltr');
+            }
+            
+            // Update all text elements
+            updateLanguage();
+        });
+        
+        // Update all text elements based on current language
+        function updateLanguage() {
+            const t = translations[currentLanguage];
+            
+            // Update page title
+            document.title = t.title;
+            
+            // Update main title
+            document.querySelector('h1').textContent = t.title;
+            
+            // Update section titles
+            const sectionTitles = document.querySelectorAll('.section-title');
+            sectionTitles[0].textContent = t.uploadLogo;
+            sectionTitles[1].textContent = t.enterParticipants;
+            
+            if (sectionTitles[2]) {
+                sectionTitles[2].textContent = t.winnerIs;
+            }
+            
+            if (sectionTitles[3]) {
+                sectionTitles[3].textContent = t.previousWinners;
+            }
+            
+            // Update logo placeholder
+            const logoPlaceholder = document.querySelector('.logo-placeholder');
+            if (logoPlaceholder) {
+                logoPlaceholder.innerHTML = `
+                    <p>${t.uploadPlaceholder}</p>
+                    <p><small>${t.uploadNote}</small></p>
+                `;
+            }
+            
+            // Update participants placeholder
+            participantsInput.placeholder = t.participantsPlaceholder;
+            
+            // Update example text
+            const participantsExample = document.querySelector('.participants-section p small');
+            participantsExample.textContent = t.participantsExample;
+            
+            // Update buttons
+            pickWinnerBtn.textContent = t.pickWinner;
+            redoBtn.textContent = t.pickAnother;
+            downloadBtn.textContent = t.downloadWinner;
+            languageToggle.textContent = t.languageBtn;
+            
+            // Update winner text if present
+            if (winnerName.textContent === 'Spinning...') {
+                winnerName.textContent = t.spinning;
+            }
+            
+            // Update presented by text
+            const presentedBy = document.querySelector('.presented-by span');
+            if (presentedBy) {
+                presentedBy.textContent = t.presentedBy;
+            }
+        }
 
         // Logo Upload
         logoPreview.addEventListener('click', () => {
@@ -386,7 +540,7 @@
             const names = parseParticipants(participantsInput.value);
             
             if (names.length === 0) {
-                alert('Please enter at least one participant.');
+                alert(translations[currentLanguage].noParticipants);
                 return;
             }
             
@@ -428,13 +582,13 @@
         // Select Winner
         function selectWinner() {
             if (participants.length === 0) {
-                alert('No participants available.');
+                alert(translations[currentLanguage].noParticipantsAvailable);
                 return;
             }
 
             // Show winner section
             winnerSection.classList.remove('hidden');
-            winnerName.textContent = 'Spinning...';
+            winnerName.textContent = translations[currentLanguage].spinning;
             winnerName.classList.add('spinning');
             
             // Update the winner logo with the current logo if available
@@ -566,6 +720,13 @@
             ctx.textAlign = 'center';
             ctx.fillText('Winner Announcement!', canvas.width / 2, 80);
             
+            // Different text based on language
+            if (currentLanguage === 'arabic') {
+                ctx.fillText('إعلان الفائز!', canvas.width / 2, 80);
+            } else {
+                ctx.fillText('Winner Announcement!', canvas.width / 2, 80);
+            }
+            
             // Winner name
             ctx.fillStyle = '#ff6b6b';
             ctx.font = 'bold 60px Segoe UI, Arial, sans-serif';
@@ -612,6 +773,8 @@
             link.href = canvas.toDataURL('image/png');
             link.click();
         }
+        // Initialize the language
+        updateLanguage();
     </script>
 </body>
 </html>
