@@ -315,6 +315,15 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            padding: 15px 0;
+            border-top: 1px solid var(--border-color);
+            color: #666;
+            font-size: 14px;
+        }
+
         /* Responsive styles */
         @media (max-width: 600px) {
             .buttons {
@@ -371,6 +380,10 @@
             <div class="section-title">Previous Winners</div>
             <ul class="winner-history" id="winnerHistory"></ul>
         </div>
+
+        <div class="footer" id="footer">
+            Designed by Saher M.
+        </div>
     </div>
     
     <canvas id="canvas"></canvas>
@@ -395,7 +408,8 @@
                 previousWinners: "Previous Winners",
                 languageBtn: "العربية",
                 noParticipants: "Please enter at least one participant.",
-                noParticipantsAvailable: "No participants available."
+                noParticipantsAvailable: "No participants available.",
+                footer: "Designed by Saher M."
             },
             arabic: {
                 title: "منتقي الفائز العشوائي",
@@ -414,7 +428,8 @@
                 previousWinners: "الفائزون السابقون",
                 languageBtn: "English",
                 noParticipants: "الرجاء إدخال مشارك واحد على الأقل.",
-                noParticipantsAvailable: "لا يوجد مشاركين."
+                noParticipantsAvailable: "لا يوجد مشاركين.",
+                footer: "جميع الحقوق محفوظة: ساهر الشمري"
             }
         };
 
@@ -433,6 +448,7 @@
         const winnerHistory = document.getElementById('winnerHistory');
         const languageToggle = document.getElementById('languageToggle');
         const container = document.querySelector('.container');
+        const footer = document.getElementById('footer');
         
         // Variables
         let participants = [];
@@ -511,6 +527,9 @@
             if (presentedBy) {
                 presentedBy.textContent = t.presentedBy;
             }
+            
+            // Update footer
+            footer.textContent = t.footer;
         }
 
         // Logo Upload
